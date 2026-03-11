@@ -42,10 +42,10 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
         String normalizedEmail = request.email().toLowerCase();
         if (userAccountRepository.existsByEmail(normalizedEmail)) {
-            throw new DuplicateResourceException("Email already registered");
+            throw new DuplicateResourceException("邮箱已被注册");
         }
         if (userAccountRepository.existsByUsername(request.username())) {
-            throw new DuplicateResourceException("Username already registered");
+            throw new DuplicateResourceException("用户名已被占用");
         }
 
         UserAccount user = new UserAccount();
@@ -65,14 +65,14 @@ public class AuthService {
         );
 
         UserAccount user = userAccountRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("用户不存在"));
 
         return toAuthResponse(user);
     }
 
     public UserAccount getCurrentUser(String email) {
         return userAccountRepository.findByEmail(email.toLowerCase())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("用户不存在"));
     }
 
     public UserProfileResponse toProfile(UserAccount user) {
@@ -102,4 +102,3 @@ public class AuthService {
         );
     }
 }
-

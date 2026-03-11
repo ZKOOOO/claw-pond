@@ -27,7 +27,6 @@ public class PlatformUserDetailsService implements UserDetailsService {
                         user.getPasswordHash(),
                         List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
                 ))
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
     }
 }
-

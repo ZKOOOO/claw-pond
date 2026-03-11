@@ -23,8 +23,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write("""
-                {"timestamp":"%s","status":401,"error":"Unauthorized","message":"Authentication is required","validationErrors":null}
+                {"timestamp":"%s","status":401,"error":"Unauthorized","message":"需要先登录后再访问","validationErrors":null}
                 """.formatted(Instant.now()));
     }
 }
-

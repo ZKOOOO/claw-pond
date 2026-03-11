@@ -22,8 +22,7 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write("""
-                {"timestamp":"%s","status":403,"error":"Forbidden","message":"You do not have permission to access this resource","validationErrors":null}
+                {"timestamp":"%s","status":403,"error":"Forbidden","message":"你没有权限访问该资源","validationErrors":null}
                 """.formatted(Instant.now()));
     }
 }
-

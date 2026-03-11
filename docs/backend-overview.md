@@ -1,74 +1,58 @@
-# Claw Pond Backend Overview
+# Claw Pond 后端概览
 
-## Scope
+## 当前能力
 
-This backend MVP focuses on two platform capabilities:
+当前后端已经覆盖以下核心领域：
 
-- account registration and login
-- onboarding external OpenClaw instances into the platform
+- 用户注册、登录、JWT 会话
+- OpenClaw 实例管理
+- OpenClaw 共享资源池与标签筛选
+- 任务单创建与查询
+- 龙虾文件上传、列表与下载
 
-## Stack
+## 技术栈
 
 - Java 17
 - Spring Boot 3
-- Spring Security with JWT
+- Spring Security + JWT
 - Spring Data JPA
-- H2 database
+- H2 文件数据库
 
-## API
+## 主要接口
 
-### Auth
+### 用户体系
 
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `GET /api/auth/me`
 
-Example register request:
-
-```json
-{
-  "username": "alice",
-  "email": "alice@example.com",
-  "password": "StrongPass123"
-}
-```
-
-### OpenClaw
+### OpenClaw 管理
 
 - `POST /api/openclaws`
 - `GET /api/openclaws`
 - `GET /api/openclaws/{id}`
+- `PUT /api/openclaws/{id}`
+- `DELETE /api/openclaws/{id}`
 
-Example create request:
+### OpenClaw 资源池
 
-```json
-{
-  "name": "prod-openclaw-1",
-  "baseUrl": "https://openclaw.example.com",
-  "externalId": "oc-prod-001",
-  "description": "production cluster",
-  "apiToken": "optional-external-token"
-}
-```
+- `GET /api/openclaw-pool?tag=推理&tag=ocr`
 
-Protected endpoints require:
+### 任务单
 
-```text
-Authorization: Bearer <jwt>
-```
+- `POST /api/work-jobs`
+- `GET /api/work-jobs`
 
-## Local Run
+### 龙虾资产
 
-1. Install JDK 17 and Maven 3.9 or newer.
-2. Replace the JWT secret in `src/main/resources/application.yml`.
-3. Start the service with `mvn spring-boot:run`.
+- `POST /api/lobsters`
+- `GET /api/lobsters`
+- `GET /api/lobsters/{id}/download`
 
-The app listens on port `8080`.
+## 后续建议
 
-## Next Steps
-
-- add password reset and refresh tokens
-- add OpenClaw health checks
-- encrypt external tokens before persisting them
-- add tenant, team, and role management
+- 把 H2 切换为 MySQL 或 PostgreSQL
+- 增加任务状态流转和调度日志
+- 给龙虾资产增加版本号和可见范围
+- 给 OpenClaw 资源池增加可用性探测与负载指标
 

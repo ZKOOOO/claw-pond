@@ -1,30 +1,31 @@
-# Claw Pond Frontend Overview
+# Claw Pond 前端概览
 
-## Entry
+## 入口
 
-After the backend starts, open:
+启动后端后，直接打开：
 
 - `http://localhost:8080/`
 
-The frontend is served by Spring Boot static resources and calls the existing backend APIs directly.
+页面由 Spring Boot 静态资源直接提供。
 
-## What The UI Can Do
+## 当前页面包含的区域
 
-- register a user
-- login with email and password
-- show the current authenticated user
-- register an external OpenClaw instance
-- load the current user's OpenClaw inventory
+- 注册与登录
+- 当前会话信息
+- 我的 OpenClaw 实例管理
+- OpenClaw 资源池与标签筛选
+- 任务单创建与列表
+- 我的龙虾上传与列表
 
-## Basic Flow
+## 推荐操作流程
 
-1. Open the homepage.
-2. Use the auth card to register or login.
-3. Confirm the session card shows your username and role.
-4. Fill the OpenClaw onboarding form.
-5. Refresh the inventory list to confirm the instance was created.
+1. 先注册或登录账号。
+2. 创建自己的 OpenClaw，并打上标签。
+3. 打开 OpenClaw 资源池，按标签筛选。
+4. 选中一个 OpenClaw 后创建任务单。
+5. 上传自己的龙虾文件并沉淀标签化资产。
 
-## Files
+## 主要前端文件
 
 - `src/main/resources/static/index.html`
 - `src/main/resources/static/assets/styles.css`

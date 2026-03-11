@@ -20,6 +20,11 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), null);
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException exception) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), null);
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException exception) {
         return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), null);
@@ -27,7 +32,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({UnauthorizedException.class, BadCredentialsException.class})
     public ResponseEntity<ErrorResponse> handleUnauthorized(RuntimeException exception) {
-        return buildResponse(HttpStatus.UNAUTHORIZED, exception.getMessage(), null);
+        String message = exception instanceof BadCredentialsException ? "邮箱或密码错误" : exception.getMessage();
+        return buildResponse(HttpStatus.UNAUTHORIZED, message, null);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -36,7 +42,7 @@ public class GlobalExceptionHandler {
         for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
             validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
-        return buildResponse(HttpStatus.BAD_REQUEST, "Validation failed", validationErrors);
+        return buildResponse(HttpStatus.BAD_REQUEST, "参数校验失败", validationErrors);
     }
 
     @ExceptionHandler(Exception.class)
@@ -54,4 +60,3 @@ public class GlobalExceptionHandler {
         ));
     }
 }
-

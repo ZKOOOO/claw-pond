@@ -8,10 +8,9 @@ import jakarta.validation.constraints.Size;
 public record RegisterRequest(
         @NotBlank
         @Size(min = 3, max = 50)
-        @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "username only supports letters, numbers, dot, underscore and hyphen")
+        @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "用户名只允许字母、数字、点、下划线和中划线")
         String username,
         @NotBlank @Email String email,
         @NotBlank @Size(min = 8, max = 100) String password
 ) {
 }
-

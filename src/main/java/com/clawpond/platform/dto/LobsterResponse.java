@@ -4,16 +4,13 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-public record OpenClawResponse(
+public record LobsterResponse(
         UUID id,
         String name,
-        String baseUrl,
-        String externalId,
         String description,
-        boolean active,
-        String ownerUsername,
+        String originalFilename,
+        String downloadUrl,
         List<String> tagNames,
         Instant createdAt
 ) {
 }
-

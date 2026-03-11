@@ -28,7 +28,7 @@ html {
 body {
     margin: 0;
     min-height: 100vh;
-    font-family: "Aptos", "Segoe UI Variable Text", "Trebuchet MS", sans-serif;
+    font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC", sans-serif;
     color: var(--ink);
     background:
         radial-gradient(circle at top left, rgba(217, 95, 61, 0.18), transparent 34%),
@@ -42,6 +42,7 @@ textarea {
     font: inherit;
 }
 
+/* 页面基础布局 */
 .page-shell {
     position: relative;
     padding: 32px 24px 56px;
@@ -111,14 +112,14 @@ textarea {
 .hero h1,
 .section-head h2 {
     margin: 0;
-    font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
+    font-family: "Microsoft JhengHei UI", "Microsoft YaHei UI", sans-serif;
     letter-spacing: -0.03em;
 }
 
 .hero h1 {
     max-width: 12ch;
     font-size: clamp(2.6rem, 6vw, 5rem);
-    line-height: 0.92;
+    line-height: 1;
 }
 
 .hero-text {
@@ -152,7 +153,8 @@ textarea {
 
 .metric-card strong,
 .profile-tile strong,
-.api-tile strong {
+.api-tile strong,
+.summary-card strong {
     display: block;
     margin-top: 8px;
     font-size: 1.1rem;
@@ -161,7 +163,10 @@ textarea {
 .metric-card p,
 .tip-box p,
 .empty-state p,
-.api-tile p {
+.api-tile p,
+.summary-card p,
+.job-card p,
+.asset-card p {
     margin: 8px 0 0;
     color: var(--muted);
     line-height: 1.6;
@@ -208,7 +213,8 @@ textarea {
 
 .tip-badge,
 .chip,
-.method {
+.method,
+.status-pill {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -216,7 +222,6 @@ textarea {
     border-radius: 999px;
     font-size: 0.78rem;
     letter-spacing: 0.08em;
-    text-transform: uppercase;
 }
 
 .tip-badge {
@@ -237,20 +242,15 @@ textarea {
 }
 
 .auth-card,
-.session-card,
-.onboarding-card,
-.inventory-card,
-.api-card {
-    position: relative;
-}
-
-.auth-card,
 .session-card {
     grid-column: span 6;
 }
 
 .onboarding-card,
 .inventory-card,
+.pool-card,
+.jobs-card,
+.lobster-card,
 .api-card {
     grid-column: span 12;
 }
@@ -261,6 +261,20 @@ textarea {
     justify-content: space-between;
     gap: 16px;
     margin-bottom: 20px;
+}
+
+.form-mode,
+.session-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.toolbar-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
 }
 
 .segmented {
@@ -329,6 +343,33 @@ textarea {
     grid-column: 1 / -1;
 }
 
+.toggle-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(20, 35, 31, 0.14);
+    background: rgba(255, 255, 255, 0.84);
+}
+
+.toggle-card input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--teal);
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.form-actions .primary-btn {
+    flex: 1;
+}
+
 .primary-btn,
 .ghost-btn {
     display: inline-flex;
@@ -340,7 +381,6 @@ textarea {
 }
 
 .primary-btn {
-    grid-column: 1 / -1;
     border: 0;
     color: #fffaf2;
     background: linear-gradient(135deg, var(--accent), var(--accent-deep));
@@ -359,9 +399,26 @@ textarea {
     color: var(--ink);
 }
 
-.session-actions {
-    display: flex;
-    gap: 10px;
+.ghost-btn.danger-btn {
+    color: #9b2f15;
+    border-color: rgba(155, 47, 21, 0.18);
+    background: rgba(217, 95, 61, 0.08);
+}
+
+.ghost-btn.primary-like {
+    background: rgba(27, 107, 99, 0.12);
+    color: var(--teal);
+    border-color: rgba(27, 107, 99, 0.18);
+}
+
+.chip {
+    background: rgba(27, 107, 99, 0.1);
+    color: var(--teal);
+}
+
+.chip.editing {
+    background: rgba(217, 95, 61, 0.12);
+    color: var(--accent-deep);
 }
 
 .empty-state {
@@ -373,9 +430,21 @@ textarea {
 
 .profile-grid,
 .instance-grid,
-.api-grid {
+.api-grid,
+.summary-grid,
+.job-grid,
+.asset-grid {
     display: grid;
     gap: 14px;
+}
+
+.profile-grid,
+.summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-grid {
+    margin-bottom: 18px;
 }
 
 .profile-grid {
@@ -384,16 +453,26 @@ textarea {
 
 .profile-tile,
 .instance-card,
-.api-tile {
+.api-tile,
+.summary-card,
+.job-card,
+.asset-card {
     padding: 18px;
     border-radius: var(--radius-md);
     background: rgba(255, 255, 255, 0.72);
     border: 1px solid rgba(20, 35, 31, 0.08);
 }
 
+.summary-card strong {
+    font-size: 1.8rem;
+}
+
+.summary-card span,
 .profile-tile span,
 .instance-meta,
-.instance-card p {
+.instance-card p,
+.job-card p,
+.asset-card p {
     color: var(--muted);
 }
 
@@ -412,22 +491,33 @@ textarea {
     color: #a33418;
 }
 
-.instance-grid {
+.instance-grid,
+.job-grid,
+.asset-grid {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
 
-.instance-card {
+.instance-card,
+.job-card,
+.asset-card {
     position: relative;
     overflow: hidden;
 }
 
-.instance-card::after {
+.instance-card::after,
+.job-card::after,
+.asset-card::after {
     content: "";
     position: absolute;
     inset: auto -24px -36px auto;
     width: 120px;
     height: 120px;
     background: radial-gradient(circle, rgba(217, 95, 61, 0.16), transparent 70%);
+}
+
+.selected-card {
+    border-color: rgba(27, 107, 99, 0.28);
+    box-shadow: 0 16px 30px rgba(27, 107, 99, 0.1);
 }
 
 .instance-head {
@@ -441,15 +531,7 @@ textarea {
     font-size: 1.05rem;
 }
 
-.chip {
-    background: rgba(27, 107, 99, 0.1);
-    color: var(--teal);
-}
-
 .status-pill {
-    padding: 6px 10px;
-    border-radius: 999px;
-    font-size: 0.78rem;
     background: rgba(167, 201, 87, 0.18);
     color: #567024;
 }
@@ -459,7 +541,8 @@ textarea {
     color: var(--warning);
 }
 
-.instance-url {
+.instance-url,
+.text-link {
     display: inline-block;
     margin: 12px 0 10px;
     color: var(--teal);
@@ -472,6 +555,39 @@ textarea {
     display: grid;
     gap: 6px;
     font-size: 0.92rem;
+}
+
+.tag-cluster {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(27, 107, 99, 0.08);
+    color: var(--teal);
+    font-size: 0.82rem;
+}
+
+.tag-chip.empty {
+    background: rgba(20, 35, 31, 0.06);
+    color: var(--muted);
+}
+
+.instance-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.instance-actions .ghost-btn {
+    flex: 1;
+    min-height: 40px;
 }
 
 .api-grid {
@@ -488,14 +604,24 @@ textarea {
     font-weight: 700;
 }
 
-.method-post {
+.method-create {
     background: rgba(217, 95, 61, 0.13);
     color: var(--accent-deep);
 }
 
-.method-get {
+.method-read {
     background: rgba(27, 107, 99, 0.12);
     color: var(--teal);
+}
+
+.method-update {
+    background: rgba(201, 122, 43, 0.14);
+    color: #8e5a17;
+}
+
+.method-delete {
+    background: rgba(155, 47, 21, 0.12);
+    color: #9b2f15;
 }
 
 .hidden {
@@ -522,27 +648,36 @@ textarea {
     .session-card,
     .onboarding-card,
     .inventory-card,
+    .pool-card,
+    .jobs-card,
+    .lobster-card,
     .api-card {
         grid-column: span 12;
     }
 
     .hero-metrics,
     .profile-grid,
+    .summary-grid,
     .auth-form,
     .resource-form {
         grid-template-columns: 1fr;
     }
 
-    .section-head {
+    .section-head,
+    .form-actions {
         flex-direction: column;
+        align-items: stretch;
     }
 
     .session-actions {
         width: 100%;
     }
 
-    .session-actions .ghost-btn {
+    .session-actions .ghost-btn,
+    .form-actions .ghost-btn,
+    .form-actions .primary-btn {
         flex: 1;
+        width: 100%;
     }
 }
 
@@ -560,5 +695,8 @@ textarea {
     .hero h1 {
         max-width: none;
     }
-}
 
+    .instance-actions {
+        flex-direction: column;
+    }
+}

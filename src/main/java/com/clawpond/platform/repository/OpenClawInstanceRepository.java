@@ -14,8 +14,15 @@ public interface OpenClawInstanceRepository extends JpaRepository<OpenClawInstan
 
     boolean existsByExternalId(String externalId);
 
+    boolean existsByBaseUrlAndIdNot(String baseUrl, UUID id);
+
+    boolean existsByExternalIdAndIdNot(String externalId, UUID id);
+
+    List<OpenClawInstance> findAllByActiveTrue();
+
     List<OpenClawInstance> findAllByOwnerOrderByCreatedAtDesc(UserAccount owner);
 
     Optional<OpenClawInstance> findByIdAndOwner(UUID id, UserAccount owner);
-}
 
+    Optional<OpenClawInstance> findByIdAndActiveTrue(UUID id);
+}

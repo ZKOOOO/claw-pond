@@ -19,8 +19,8 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "openclaw_instances")
-public class OpenClawInstance {
+@Table(name = "lobster_assets")
+public class LobsterAsset {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -29,20 +29,20 @@ public class OpenClawInstance {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, unique = true, length = 255)
-    private String baseUrl;
-
-    @Column(nullable = false, unique = true, length = 120)
-    private String externalId;
-
     @Column(length = 500)
     private String description;
 
-    @Column(nullable = false)
-    private boolean active;
+    @Column(nullable = false, length = 255)
+    private String originalFilename;
 
-    @Column(length = 255)
-    private String apiToken;
+    @Column(nullable = false, unique = true, length = 255)
+    private String storedFilename;
+
+    @Column(length = 120)
+    private String mediaType;
+
+    @Column(nullable = false)
+    private long fileSize;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
@@ -50,8 +50,8 @@ public class OpenClawInstance {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name = "openclaw_instance_tags",
-            joinColumns = @JoinColumn(name = "openclaw_instance_id"),
+            name = "lobster_asset_tags",
+            joinColumns = @JoinColumn(name = "lobster_asset_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private Set<Tag> tags = new LinkedHashSet<>();
@@ -62,9 +62,6 @@ public class OpenClawInstance {
     @PrePersist
     void onCreate() {
         createdAt = Instant.now();
-        if (!active) {
-            active = true;
-        }
     }
 
     public UUID getId() {
@@ -79,22 +76,6 @@ public class OpenClawInstance {
         this.name = name;
     }
 
-    public String getBaseUrl() {
-        return baseUrl;
-    }
-
-    public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
-    }
-
-    public String getExternalId() {
-        return externalId;
-    }
-
-    public void setExternalId(String externalId) {
-        this.externalId = externalId;
-    }
-
     public String getDescription() {
         return description;
     }
@@ -103,20 +84,36 @@ public class OpenClawInstance {
         this.description = description;
     }
 
-    public boolean isActive() {
-        return active;
+    public String getOriginalFilename() {
+        return originalFilename;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public void setOriginalFilename(String originalFilename) {
+        this.originalFilename = originalFilename;
     }
 
-    public String getApiToken() {
-        return apiToken;
+    public String getStoredFilename() {
+        return storedFilename;
     }
 
-    public void setApiToken(String apiToken) {
-        this.apiToken = apiToken;
+    public void setStoredFilename(String storedFilename) {
+        this.storedFilename = storedFilename;
+    }
+
+    public String getMediaType() {
+        return mediaType;
+    }
+
+    public void setMediaType(String mediaType) {
+        this.mediaType = mediaType;
+    }
+
+    public long getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(long fileSize) {
+        this.fileSize = fileSize;
     }
 
     public UserAccount getOwner() {
@@ -139,3 +136,4 @@ public class OpenClawInstance {
         return createdAt;
     }
 }
+
