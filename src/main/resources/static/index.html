@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claw Pond Console</title>
+    <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+<div class="page-shell">
+    <div class="ambient ambient-left"></div>
+    <div class="ambient ambient-right"></div>
+
+    <header class="hero">
+        <div class="hero-copy">
+            <p class="eyebrow">OpenClaw Platform</p>
+            <h1>Bring scattered OpenClaw nodes into one control room</h1>
+            <p class="hero-text">
+                This page talks directly to the current Spring Boot service. You can register, sign in,
+                inspect the active session, onboard external OpenClaw instances, and review the inventory
+                owned by the current user.
+            </p>
+
+            <div class="hero-metrics">
+                <article class="metric-card">
+                    <span class="metric-label">Step 1</span>
+                    <strong>Create an account</strong>
+                    <p>Registration returns a JWT immediately and the page stores it locally.</p>
+                </article>
+                <article class="metric-card">
+                    <span class="metric-label">Step 2</span>
+                    <strong>Onboard OpenClaw</strong>
+                    <p>Submit a name, base URL, and external ID to bind an instance to your account.</p>
+                </article>
+                <article class="metric-card">
+                    <span class="metric-label">Step 3</span>
+                    <strong>Review inventory</strong>
+                    <p>The inventory view shows ownership, endpoint address, and creation time.</p>
+                </article>
+            </div>
+        </div>
+
+        <aside class="hero-panel">
+            <div class="status-panel">
+                <div class="panel-head">
+                    <span class="panel-kicker">Operator Guide</span>
+                    <strong>Fastest path through the UI</strong>
+                </div>
+                <ol class="guide-list">
+                    <li>Register a new account or sign in with an existing one.</li>
+                    <li>Check that the Session card shows your username and role.</li>
+                    <li>Fill in the OpenClaw public URL and a globally unique external ID.</li>
+                    <li>Create the instance and refresh the inventory list to verify it was stored.</li>
+                </ol>
+                <div class="tip-box">
+                    <span class="tip-badge">Note</span>
+                    <p>`baseUrl` must start with `http://` or `https://`, and `externalId` must be unique.</p>
+                </div>
+            </div>
+        </aside>
+    </header>
+
+    <main class="workspace">
+        <section class="console-card auth-card">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker">Authentication</p>
+                    <h2>Register and Sign In</h2>
+                </div>
+                <div class="segmented" role="tablist" aria-label="Authentication mode">
+                    <button class="segmented-btn active" data-auth-mode="login" type="button">Sign In</button>
+                    <button class="segmented-btn" data-auth-mode="register" type="button">Register</button>
+                </div>
+            </div>
+
+            <form id="login-form" class="auth-form" data-mode="login">
+                <label class="field">
+                    <span>Email</span>
+                    <input name="email" type="email" autocomplete="email" placeholder="alice@example.com" required>
+                </label>
+                <label class="field">
+                    <span>Password</span>
+                    <input name="password" type="password" autocomplete="current-password" placeholder="At least 8 characters" required>
+                </label>
+                <button class="primary-btn" type="submit">Sign In</button>
+            </form>
+
+            <form id="register-form" class="auth-form hidden" data-mode="register">
+                <label class="field">
+                    <span>Username</span>
+                    <input name="username" type="text" autocomplete="username" placeholder="alice" required>
+                </label>
+                <label class="field">
+                    <span>Email</span>
+                    <input name="email" type="email" autocomplete="email" placeholder="alice@example.com" required>
+                </label>
+                <label class="field">
+                    <span>Password</span>
+                    <input name="password" type="password" autocomplete="new-password" placeholder="At least 8 characters" required>
+                </label>
+                <button class="primary-btn" type="submit">Register and Sign In</button>
+            </form>
+
+            <div id="auth-feedback" class="feedback-panel" aria-live="polite"></div>
+        </section>
+
+        <section class="console-card session-card">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker">Session</p>
+                    <h2>Current Session</h2>
+                </div>
+                <div class="session-actions">
+                    <button id="load-profile-btn" class="ghost-btn" type="button">Refresh Session</button>
+                    <button id="logout-btn" class="ghost-btn" type="button">Sign Out</button>
+                </div>
+            </div>
+
+            <div id="session-empty" class="empty-state">
+                <strong>No active session yet</strong>
+                <p>After sign in, this section will show the current user profile and session state.</p>
+            </div>
+
+            <div id="session-profile" class="profile-grid hidden">
+                <article class="profile-tile">
+                    <span>Username</span>
+                    <strong id="profile-username">-</strong>
+                </article>
+                <article class="profile-tile">
+                    <span>Email</span>
+                    <strong id="profile-email">-</strong>
+                </article>
+                <article class="profile-tile">
+                    <span>Role</span>
+                    <strong id="profile-role">-</strong>
+                </article>
+                <article class="profile-tile">
+                    <span>Created At</span>
+                    <strong id="profile-created">-</strong>
+                </article>
+            </div>
+        </section>
+
+        <section class="console-card onboarding-card">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker">OpenClaw Onboarding</p>
+                    <h2>Register External OpenClaw</h2>
+                </div>
+                <span class="chip">POST /api/openclaws</span>
+            </div>
+
+            <form id="openclaw-form" class="resource-form">
+                <label class="field">
+                    <span>Instance Name</span>
+                    <input name="name" type="text" placeholder="prod-openclaw-1" required>
+                </label>
+                <label class="field">
+                    <span>Base URL</span>
+                    <input name="baseUrl" type="url" placeholder="https://openclaw.example.com" required>
+                </label>
+                <label class="field">
+                    <span>External ID</span>
+                    <input name="externalId" type="text" placeholder="oc-prod-001" required>
+                </label>
+                <label class="field field-wide">
+                    <span>Description</span>
+                    <textarea name="description" rows="3" placeholder="Production cluster"></textarea>
+                </label>
+                <label class="field field-wide">
+                    <span>API Token (optional)</span>
+                    <input name="apiToken" type="text" placeholder="Store a remote token here if the external node requires one">
+                </label>
+                <button class="primary-btn" type="submit">Create Instance</button>
+            </form>
+
+            <div id="resource-feedback" class="feedback-panel" aria-live="polite"></div>
+        </section>
+
+        <section class="console-card inventory-card">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker">Inventory</p>
+                    <h2>Managed Instances</h2>
+                </div>
+                <button id="load-openclaws-btn" class="ghost-btn" type="button">Refresh Inventory</button>
+            </div>
+
+            <div id="inventory-empty" class="empty-state">
+                <strong>No OpenClaw instance found yet</strong>
+                <p>Create one from the onboarding form and refresh the list to see it here.</p>
+            </div>
+
+            <div id="openclaw-list" class="instance-grid hidden"></div>
+        </section>
+
+        <section class="console-card api-card">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker">How To Operate</p>
+                    <h2>API Flow At A Glance</h2>
+                </div>
+            </div>
+
+            <div class="api-grid">
+                <article class="api-tile">
+                    <span class="method method-post">POST</span>
+                    <strong>/api/auth/register</strong>
+                    <p>Create a user account and receive a JWT.</p>
+                </article>
+                <article class="api-tile">
+                    <span class="method method-post">POST</span>
+                    <strong>/api/auth/login</strong>
+                    <p>Authenticate with email and password, then receive a JWT.</p>
+                </article>
+                <article class="api-tile">
+                    <span class="method method-get">GET</span>
+                    <strong>/api/auth/me</strong>
+                    <p>Inspect the current authenticated identity.</p>
+                </article>
+                <article class="api-tile">
+                    <span class="method method-post">POST</span>
+                    <strong>/api/openclaws</strong>
+                    <p>Create a managed record for an external OpenClaw node.</p>
+                </article>
+                <article class="api-tile">
+                    <span class="method method-get">GET</span>
+                    <strong>/api/openclaws</strong>
+                    <p>Load the current user's visible instance list.</p>
+                </article>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script src="/assets/app.js"></script>
+</body>
+</html>
+
