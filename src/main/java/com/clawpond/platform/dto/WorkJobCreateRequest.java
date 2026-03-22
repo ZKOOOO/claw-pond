@@ -14,7 +14,7 @@ public record WorkJobCreateRequest(
         @NotBlank @Size(min = 2, max = 120) String title,
         @Size(max = 1000) String description,
         @NotNull UUID openClawId,
+        UUID lobsterAssetId,
         List<@Size(min = 1, max = 32) String> desiredTags
 ) {
 }
-

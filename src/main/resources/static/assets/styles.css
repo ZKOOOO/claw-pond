@@ -248,6 +248,7 @@ textarea {
 
 .onboarding-card,
 .inventory-card,
+.admin-card,
 .pool-card,
 .jobs-card,
 .lobster-card,
@@ -323,6 +324,7 @@ textarea {
 }
 
 .field input,
+.field select,
 .field textarea {
     width: 100%;
     padding: 14px 16px;
@@ -334,6 +336,7 @@ textarea {
 }
 
 .field input:focus,
+.field select:focus,
 .field textarea:focus {
     border-color: rgba(27, 107, 99, 0.4);
     box-shadow: 0 0 0 4px rgba(27, 107, 99, 0.08);
@@ -433,7 +436,8 @@ textarea {
 .api-grid,
 .summary-grid,
 .job-grid,
-.asset-grid {
+.asset-grid,
+.admin-grid {
     display: grid;
     gap: 14px;
 }
@@ -451,16 +455,80 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.admin-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 18px;
+}
+
 .profile-tile,
 .instance-card,
 .api-tile,
 .summary-card,
 .job-card,
-.asset-card {
+.asset-card,
+.admin-panel {
     padding: 18px;
     border-radius: var(--radius-md);
     background: rgba(255, 255, 255, 0.72);
     border: 1px solid rgba(20, 35, 31, 0.08);
+}
+
+.admin-panel h3 {
+    margin: 0 0 12px;
+    font-size: 1rem;
+}
+
+.admin-list {
+    display: grid;
+    gap: 10px;
+}
+
+.admin-row,
+.admin-list-empty {
+    display: grid;
+    gap: 4px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.62);
+    border: 1px solid rgba(20, 35, 31, 0.06);
+}
+
+.admin-row strong {
+    font-size: 0.98rem;
+}
+
+.admin-row span,
+.admin-list-empty {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.admin-actions select {
+    min-width: 120px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(20, 35, 31, 0.14);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.admin-actions label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.admin-actions input[type="checkbox"] {
+    accent-color: var(--teal);
 }
 
 .summary-card strong {
@@ -658,6 +726,7 @@ textarea {
     .hero-metrics,
     .profile-grid,
     .summary-grid,
+    .admin-grid,
     .auth-form,
     .resource-form {
         grid-template-columns: 1fr;

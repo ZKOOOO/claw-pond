@@ -3,21 +3,16 @@ package com.clawpond.platform.dto;
 import com.clawpond.platform.model.WorkJobStatus;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
-public record WorkJobResponse(
+public record RecentWorkJobResponse(
         UUID id,
         String title,
-        String description,
         WorkJobStatus status,
-        UUID openClawId,
+        String requesterUsername,
         String openClawName,
-        List<String> openClawTags,
-        UUID lobsterAssetId,
         String lobsterAssetName,
-        List<String> lobsterTags,
-        List<String> desiredTags,
         Instant createdAt
 ) {
 }
+

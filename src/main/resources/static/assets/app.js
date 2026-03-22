@@ -3,6 +3,8 @@ const TOKEN_KEY = "clawpond.jwt";
 const state = {
     token: localStorage.getItem(TOKEN_KEY) || "",
     profile: null,
+    adminOverview: null,
+    adminUsers: [],
     openclaws: [],
     poolOpenClaws: [],
     workJobs: [],
@@ -16,6 +18,7 @@ const resourceFeedback = document.getElementById("resource-feedback");
 const poolFeedback = document.getElementById("pool-feedback");
 const jobFeedback = document.getElementById("job-feedback");
 const lobsterFeedback = document.getElementById("lobster-feedback");
+const adminFeedback = document.getElementById("admin-feedback");
 
 const loginForm = document.getElementById("login-form");
 const registerForm = document.getElementById("register-form");
@@ -27,6 +30,7 @@ const openClawList = document.getElementById("openclaw-list");
 const poolList = document.getElementById("pool-list");
 const workJobList = document.getElementById("work-job-list");
 const lobsterList = document.getElementById("lobster-list");
+const adminUsersList = document.getElementById("admin-users-list");
 
 const loadProfileButton = document.getElementById("load-profile-btn");
 const logoutButton = document.getElementById("logout-btn");
@@ -34,6 +38,7 @@ const loadOpenClawsButton = document.getElementById("load-openclaws-btn");
 const loadPoolButton = document.getElementById("load-pool-btn");
 const loadWorkJobsButton = document.getElementById("load-work-jobs-btn");
 const loadLobstersButton = document.getElementById("load-lobsters-btn");
+const loadAdminOverviewButton = document.getElementById("load-admin-overview-btn");
 const authModeButtons = document.querySelectorAll("[data-auth-mode]");
 const cancelEditButton = document.getElementById("cancel-edit-btn");
 const resetInstanceButton = document.getElementById("reset-instance-btn");
@@ -43,8 +48,10 @@ const activeInput = document.getElementById("active-input");
 const poolTagFilter = document.getElementById("pool-tag-filter");
 const selectedOpenClawChip = document.getElementById("selected-openclaw-chip");
 const clearSelectedOpenClawButton = document.getElementById("clear-selected-openclaw-btn");
+const selectedOpenClawName = document.getElementById("selected-openclaw-name");
+const jobLobsterSelect = document.getElementById("job-lobster-select");
+const adminCard = document.getElementById("admin-card");
 
-// 统一更新页面里的反馈提示。
 function setFeedback(element, message, type = "") {
     element.textContent = message || "";
     element.className = "feedback-panel";
@@ -53,7 +60,6 @@ function setFeedback(element, message, type = "") {
     }
 }
 
-// 切换登录和注册两个视图。
 function switchAuthMode(mode) {
     authModeButtons.forEach((button) => {
         button.classList.toggle("active", button.dataset.authMode === mode);
@@ -63,7 +69,7 @@ function switchAuthMode(mode) {
     setFeedback(authFeedback, "");
 }
 
-// 所有接口请求都走同一个入口，统一处理 JWT、JSON 和错误信息。
+// 所有请求统一从这里走，自动附带 JWT，并把错误转换成可读消息。
 async function apiFetch(path, options = {}) {
     const isFormDataBody = options.body instanceof FormData;
     const headers = {
@@ -119,13 +125,12 @@ function saveToken(token) {
     }
 }
 
-// 把标签输入框内容切成数组，支持中英文逗号。
 function splitTagText(value) {
     if (!value || !value.trim()) {
         return [];
     }
     return value
-        .split(/[,，\n]/)
+        .split(/[,\uFF0C\n]/)
         .map((item) => item.trim())
         .filter(Boolean);
 }
@@ -157,30 +162,62 @@ function renderTagChips(tagNames) {
     return tagNames.map((tag) => `<span class="tag-chip">${escapeHtml(tag)}</span>`).join("");
 }
 
-// 退出登录时一并清理本地会话、选中状态和编辑状态。
+function renderAdminList(items, renderer) {
+    if (!items || !items.length) {
+        return '<div class="admin-list-empty">暂无记录</div>';
+    }
+    return items.map(renderer).join("");
+}
+
+function getJobStatusLabel(status) {
+    switch (status) {
+        case "CREATED":
+            return "待开始";
+        case "RUNNING":
+            return "执行中";
+        case "COMPLETED":
+            return "已完成";
+        case "FAILED":
+            return "已失败";
+        case "CANCELED":
+            return "已取消";
+        default:
+            return status;
+    }
+}
+
 function clearSession() {
     saveToken("");
     state.profile = null;
+    state.adminOverview = null;
+    state.adminUsers = [];
     state.openclaws = [];
     state.poolOpenClaws = [];
     state.workJobs = [];
     state.lobsters = [];
     state.selectedPoolOpenClawId = null;
+
     workJobForm.reset();
     lobsterForm.reset();
+
     renderProfile();
+    renderAdminOverview();
+    renderAdminUsers();
     renderSummary();
     renderManagedOpenClaws();
     renderPoolOpenClaws();
     renderWorkJobs();
     renderLobsters();
-    resetInstanceForm();
+    renderLobsterOptions();
     renderSelectedOpenClaw();
+    resetInstanceForm();
+
     setFeedback(authFeedback, "已退出登录。", "success");
     setFeedback(resourceFeedback, "");
     setFeedback(poolFeedback, "");
     setFeedback(jobFeedback, "");
     setFeedback(lobsterFeedback, "");
+    setFeedback(adminFeedback, "");
 }
 
 function renderProfile() {
@@ -202,7 +239,111 @@ function renderProfile() {
     profile.classList.remove("hidden");
 }
 
-// 根据自己的 OpenClaw 列表实时刷新概览卡片。
+function renderAdminOverview() {
+    const isAdmin = state.profile?.role === "ADMIN";
+    adminCard.classList.toggle("hidden", !isAdmin);
+
+    if (!isAdmin || !state.adminOverview) {
+        document.getElementById("admin-total-users").textContent = "0";
+        document.getElementById("admin-total-openclaws").textContent = "0";
+        document.getElementById("admin-active-openclaws").textContent = "0";
+        document.getElementById("admin-total-work-jobs").textContent = "0";
+        document.getElementById("admin-total-lobsters").textContent = "0";
+        document.getElementById("admin-total-tags").textContent = "0";
+        document.getElementById("admin-recent-users").innerHTML = "";
+        document.getElementById("admin-recent-openclaws").innerHTML = "";
+        document.getElementById("admin-recent-work-jobs").innerHTML = "";
+        document.getElementById("admin-recent-lobsters").innerHTML = "";
+        return;
+    }
+
+    const overview = state.adminOverview;
+    document.getElementById("admin-total-users").textContent = String(overview.totalUsers);
+    document.getElementById("admin-total-openclaws").textContent = String(overview.totalOpenClaws);
+    document.getElementById("admin-active-openclaws").textContent = String(overview.activeOpenClaws);
+    document.getElementById("admin-total-work-jobs").textContent = String(overview.totalWorkJobs);
+    document.getElementById("admin-total-lobsters").textContent = String(overview.totalLobsters);
+    document.getElementById("admin-total-tags").textContent = String(overview.totalTags);
+
+    document.getElementById("admin-recent-users").innerHTML = renderAdminList(overview.recentUsers, (user) => `
+        <div class="admin-row">
+            <strong>${escapeHtml(user.username)}</strong>
+            <span>${escapeHtml(user.email)}</span>
+            <span>${escapeHtml(user.role)}</span>
+            <span>${escapeHtml(formatDate(user.createdAt))}</span>
+        </div>
+    `);
+
+    document.getElementById("admin-recent-openclaws").innerHTML = renderAdminList(overview.recentOpenClaws, (item) => `
+        <div class="admin-row">
+            <strong>${escapeHtml(item.name)}</strong>
+            <span>${escapeHtml(item.ownerUsername)}</span>
+            <span>${item.active ? "启用中" : "已停用"}</span>
+            <span>${escapeHtml((item.tagNames || []).join(", ") || "未打标签")}</span>
+        </div>
+    `);
+
+    document.getElementById("admin-recent-work-jobs").innerHTML = renderAdminList(overview.recentWorkJobs, (job) => `
+        <div class="admin-row">
+            <strong>${escapeHtml(job.title)}</strong>
+            <span>${escapeHtml(job.requesterUsername)}</span>
+            <span>${escapeHtml(job.openClawName)}</span>
+            <span>${escapeHtml(job.lobsterAssetName || "未携带龙虾")}</span>
+        </div>
+    `);
+
+    document.getElementById("admin-recent-lobsters").innerHTML = renderAdminList(overview.recentLobsters, (asset) => `
+        <div class="admin-row">
+            <strong>${escapeHtml(asset.name)}</strong>
+            <span>${escapeHtml(asset.ownerUsername)}</span>
+            <span>${escapeHtml((asset.tagNames || []).join(", ") || "未打标签")}</span>
+            <span>${escapeHtml(formatDate(asset.createdAt))}</span>
+        </div>
+    `);
+}
+
+function renderAdminUsers() {
+    const isAdmin = state.profile?.role === "ADMIN";
+    if (!isAdmin) {
+        adminUsersList.innerHTML = "";
+        return;
+    }
+
+    adminUsersList.innerHTML = renderAdminList(state.adminUsers, (user) => `
+        <div class="admin-row">
+            <strong>${escapeHtml(user.username)}</strong>
+            <span>${escapeHtml(user.email)}</span>
+            <span>角色：${escapeHtml(user.role)}</span>
+            <span>状态：${user.enabled ? "启用中" : "已停用"}</span>
+            <div class="admin-actions">
+                <select data-admin-role="${escapeAttribute(user.id)}">
+                    <option value="USER" ${user.role === "USER" ? "selected" : ""}>USER</option>
+                    <option value="ADMIN" ${user.role === "ADMIN" ? "selected" : ""}>ADMIN</option>
+                </select>
+                <label>
+                    <input type="checkbox" data-admin-enabled="${escapeAttribute(user.id)}" ${user.enabled ? "checked" : ""}>
+                    启用
+                </label>
+                <button class="ghost-btn" type="button" data-admin-action="save-user" data-id="${escapeAttribute(user.id)}">保存</button>
+            </div>
+        </div>
+    `);
+}
+
+function getJobActionButtons(job) {
+    const buttons = [];
+    if (job.status === "CREATED") {
+        buttons.push('<button class="ghost-btn" type="button" data-job-action="RUNNING" data-id="' + escapeAttribute(job.id) + '">开始执行</button>');
+        buttons.push('<button class="ghost-btn danger-btn" type="button" data-job-action="CANCELED" data-id="' + escapeAttribute(job.id) + '">取消任务</button>');
+    }
+    if (job.status === "RUNNING") {
+        buttons.push('<button class="ghost-btn primary-like" type="button" data-job-action="COMPLETED" data-id="' + escapeAttribute(job.id) + '">标记完成</button>');
+        buttons.push('<button class="ghost-btn danger-btn" type="button" data-job-action="FAILED" data-id="' + escapeAttribute(job.id) + '">标记失败</button>');
+        buttons.push('<button class="ghost-btn danger-btn" type="button" data-job-action="CANCELED" data-id="' + escapeAttribute(job.id) + '">取消任务</button>');
+    }
+    return buttons.join("");
+}
+
 function renderSummary() {
     const total = state.openclaws.length;
     const active = state.openclaws.filter((item) => item.active).length;
@@ -216,7 +357,6 @@ function renderSummary() {
         : "还没有接入任何实例";
 }
 
-// 渲染我管理的 OpenClaw 列表，支持编辑和删除。
 function renderManagedOpenClaws() {
     const empty = document.getElementById("inventory-empty");
 
@@ -252,7 +392,6 @@ function renderManagedOpenClaws() {
     openClawList.classList.remove("hidden");
 }
 
-// 渲染共享 OpenClaw 池，支持按标签筛选和选择实例。
 function renderPoolOpenClaws() {
     const empty = document.getElementById("pool-empty");
 
@@ -291,7 +430,6 @@ function renderPoolOpenClaws() {
     poolList.classList.remove("hidden");
 }
 
-// 渲染任务单列表。
 function renderWorkJobs() {
     const empty = document.getElementById("work-job-empty");
 
@@ -306,14 +444,19 @@ function renderWorkJobs() {
         <article class="job-card">
             <div class="instance-head">
                 <strong>${escapeHtml(job.title)}</strong>
-                <span class="status-pill">${escapeHtml(job.status)}</span>
+                <span class="status-pill">${escapeHtml(getJobStatusLabel(job.status))}</span>
             </div>
             <p>${escapeHtml(job.description || "暂无任务说明")}</p>
             <div class="tag-cluster">${renderTagChips(job.desiredTags)}</div>
             <div class="instance-meta">
                 <span>执行 OpenClaw：${escapeHtml(job.openClawName)}</span>
                 <span>OpenClaw 标签：${escapeHtml((job.openClawTags || []).join(", ") || "未打标签")}</span>
+                <span>携带龙虾：${escapeHtml(job.lobsterAssetName || "未携带龙虾")}</span>
+                <span>龙虾标签：${escapeHtml((job.lobsterTags || []).join(", ") || "无")}</span>
                 <span>创建时间：${escapeHtml(formatDate(job.createdAt))}</span>
+            </div>
+            <div class="instance-actions">
+                ${getJobActionButtons(job)}
             </div>
         </article>
     `).join("");
@@ -322,7 +465,6 @@ function renderWorkJobs() {
     workJobList.classList.remove("hidden");
 }
 
-// 渲染龙虾资产列表。
 function renderLobsters() {
     const empty = document.getElementById("lobster-empty");
 
@@ -352,21 +494,30 @@ function renderLobsters() {
     lobsterList.classList.remove("hidden");
 }
 
+function renderLobsterOptions() {
+    const options = ['<option value="">不携带龙虾</option>']
+        .concat(state.lobsters.map((lobster) => `
+            <option value="${escapeAttribute(lobster.id)}">${escapeHtml(lobster.name)}${lobster.tagNames?.length ? `（${escapeHtml(lobster.tagNames.join(", "))}）` : ""}</option>
+        `));
+    jobLobsterSelect.innerHTML = options.join("");
+}
+
 function renderSelectedOpenClaw() {
     const selected = state.poolOpenClaws.find((item) => item.id === state.selectedPoolOpenClawId) || null;
     if (!selected) {
         selectedOpenClawChip.textContent = "尚未选择 OpenClaw";
         selectedOpenClawChip.classList.remove("editing");
         clearSelectedOpenClawButton.classList.add("hidden");
+        selectedOpenClawName.value = "未选择";
         return;
     }
 
     selectedOpenClawChip.textContent = `已选择：${selected.name}`;
     selectedOpenClawChip.classList.add("editing");
     clearSelectedOpenClawButton.classList.remove("hidden");
+    selectedOpenClawName.value = selected.name;
 }
 
-// 进入编辑模式时，把实例表单填充为当前数据。
 function startEdit(id) {
     const item = state.openclaws.find((entry) => entry.id === id);
     if (!item) {
@@ -391,7 +542,6 @@ function startEdit(id) {
     openClawForm.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-// 重置实例表单，并退出编辑模式。
 function resetInstanceForm() {
     state.editingId = null;
     openClawForm.reset();
@@ -418,19 +568,59 @@ function selectPoolOpenClaw(id) {
 async function loadProfile(showFeedback = true) {
     if (!state.token) {
         state.profile = null;
+        state.adminUsers = [];
         renderProfile();
+        renderAdminOverview();
+        renderAdminUsers();
         return;
     }
 
     try {
         state.profile = await apiFetch("/api/auth/me", { method: "GET" });
         renderProfile();
+        renderAdminOverview();
         if (showFeedback) {
             setFeedback(authFeedback, "当前身份已刷新。", "success");
         }
     } catch (error) {
         clearSession();
         setFeedback(authFeedback, `会话已失效：${error.message}`, "error");
+    }
+}
+
+async function loadAdminOverview(showFeedback = false) {
+    if (state.profile?.role !== "ADMIN") {
+        state.adminOverview = null;
+        renderAdminOverview();
+        return;
+    }
+
+    try {
+        state.adminOverview = await apiFetch("/api/admin/overview", { method: "GET" });
+        renderAdminOverview();
+        if (showFeedback) {
+            setFeedback(adminFeedback, "管理员总览已刷新。", "success");
+        }
+    } catch (error) {
+        setFeedback(adminFeedback, `加载管理员总览失败：${error.message}`, "error");
+    }
+}
+
+async function loadAdminUsers(showFeedback = false) {
+    if (state.profile?.role !== "ADMIN") {
+        state.adminUsers = [];
+        renderAdminUsers();
+        return;
+    }
+
+    try {
+        state.adminUsers = await apiFetch("/api/admin/users", { method: "GET" });
+        renderAdminUsers();
+        if (showFeedback) {
+            setFeedback(adminFeedback, `已加载 ${state.adminUsers.length} 个用户。`, "success");
+        }
+    } catch (error) {
+        setFeedback(adminFeedback, `加载用户列表失败：${error.message}`, "error");
     }
 }
 
@@ -509,12 +699,14 @@ async function loadLobsters(showFeedback = false) {
     if (!state.token) {
         state.lobsters = [];
         renderLobsters();
+        renderLobsterOptions();
         return;
     }
 
     try {
         state.lobsters = await apiFetch("/api/lobsters", { method: "GET" });
         renderLobsters();
+        renderLobsterOptions();
         if (showFeedback) {
             setFeedback(lobsterFeedback, `已加载 ${state.lobsters.length} 只龙虾。`, "success");
         }
@@ -527,11 +719,12 @@ async function loadAllAuthenticatedData() {
     await loadProfile(false);
     await loadManagedOpenClaws(false);
     await loadPoolOpenClaws(false);
-    await loadWorkJobs(false);
     await loadLobsters(false);
+    await loadWorkJobs(false);
+    await loadAdminOverview(false);
+    await loadAdminUsers(false);
 }
 
-// 创建和更新共用同一张实例表单，通过 editingId 判断当前模式。
 async function submitInstanceForm(event) {
     event.preventDefault();
     if (!state.token) {
@@ -570,6 +763,7 @@ async function submitInstanceForm(event) {
         resetInstanceForm();
         await loadManagedOpenClaws(false);
         await loadPoolOpenClaws(false);
+        await loadAdminOverview(false);
     } catch (error) {
         setFeedback(
             resourceFeedback,
@@ -602,6 +796,7 @@ async function deleteManagedOpenClaw(id) {
         setFeedback(resourceFeedback, `实例“${item.name}”已删除。`, "success");
         await loadManagedOpenClaws(false);
         await loadPoolOpenClaws(false);
+        await loadAdminOverview(false);
     } catch (error) {
         setFeedback(resourceFeedback, `删除失败：${error.message}`, "error");
     }
@@ -622,6 +817,7 @@ async function submitWorkJob(event) {
         title: workJobForm.elements.title.value,
         description: workJobForm.elements.description.value,
         openClawId: state.selectedPoolOpenClawId,
+        lobsterAssetId: jobLobsterSelect.value || null,
         desiredTags: splitTagText(workJobForm.elements.desiredTagText.value)
     };
 
@@ -632,7 +828,9 @@ async function submitWorkJob(event) {
         });
         setFeedback(jobFeedback, `任务单“${result.title}”已创建。`, "success");
         workJobForm.reset();
+        renderSelectedOpenClaw();
         await loadWorkJobs(false);
+        await loadAdminOverview(false);
     } catch (error) {
         setFeedback(jobFeedback, `创建任务单失败：${error.message}`, "error");
     }
@@ -645,16 +843,16 @@ async function submitLobster(event) {
         return;
     }
 
-    const formData = new FormData();
-    formData.append("name", lobsterForm.elements.name.value);
-    formData.append("description", lobsterForm.elements.description.value);
-    formData.append("tagText", lobsterForm.elements.tagText.value);
-
     const file = lobsterForm.elements.file.files[0];
     if (!file) {
         setFeedback(lobsterFeedback, "请选择要上传的龙虾文件。", "error");
         return;
     }
+
+    const formData = new FormData();
+    formData.append("name", lobsterForm.elements.name.value);
+    formData.append("description", lobsterForm.elements.description.value);
+    formData.append("tagText", lobsterForm.elements.tagText.value);
     formData.append("file", file);
 
     try {
@@ -665,12 +863,53 @@ async function submitLobster(event) {
         setFeedback(lobsterFeedback, `龙虾“${result.name}”已上传。`, "success");
         lobsterForm.reset();
         await loadLobsters(false);
+        await loadAdminOverview(false);
     } catch (error) {
         setFeedback(lobsterFeedback, `上传龙虾失败：${error.message}`, "error");
     }
 }
 
-// 使用事件委托处理我管理的实例卡片动作。
+async function updateWorkJobStatus(id, status) {
+    try {
+        const result = await apiFetch(`/api/work-jobs/${id}/status`, {
+            method: "PUT",
+            body: JSON.stringify({ status })
+        });
+        setFeedback(jobFeedback, `任务单“${result.title}”状态已更新为 ${getJobStatusLabel(result.status)}。`, "success");
+        await loadWorkJobs(false);
+        await loadAdminOverview(false);
+    } catch (error) {
+        setFeedback(jobFeedback, `更新任务状态失败：${error.message}`, "error");
+    }
+}
+
+async function updateAdminUser(id) {
+    const roleSelect = document.querySelector(`[data-admin-role="${id}"]`);
+    const enabledInput = document.querySelector(`[data-admin-enabled="${id}"]`);
+    if (!roleSelect || !enabledInput) {
+        setFeedback(adminFeedback, "没有找到对应的用户编辑控件。", "error");
+        return;
+    }
+
+    try {
+        const result = await apiFetch(`/api/admin/users/${id}`, {
+            method: "PUT",
+            body: JSON.stringify({
+                role: roleSelect.value,
+                enabled: enabledInput.checked
+            })
+        });
+        setFeedback(adminFeedback, `用户“${result.username}”已更新。`, "success");
+        await loadAdminUsers(false);
+        await loadAdminOverview(false);
+        if (state.profile?.id === result.id) {
+            await loadProfile(false);
+        }
+    } catch (error) {
+        setFeedback(adminFeedback, `更新用户失败：${error.message}`, "error");
+    }
+}
+
 function handleManagedInstanceAction(event) {
     const actionButton = event.target.closest("[data-action]");
     if (!actionButton) {
@@ -687,23 +926,38 @@ function handleManagedInstanceAction(event) {
     }
 }
 
-// 使用事件委托处理资源池的“选它干活”动作。
 function handlePoolAction(event) {
     const actionButton = event.target.closest("[data-pool-action]");
     if (!actionButton) {
         return;
     }
 
-    const { poolAction, id } = actionButton.dataset;
-    if (poolAction === "select") {
-        selectPoolOpenClaw(id);
+    if (actionButton.dataset.poolAction === "select") {
+        selectPoolOpenClaw(actionButton.dataset.id);
+    }
+}
+
+function handleWorkJobAction(event) {
+    const actionButton = event.target.closest("[data-job-action]");
+    if (!actionButton) {
+        return;
+    }
+    updateWorkJobStatus(actionButton.dataset.id, actionButton.dataset.jobAction);
+}
+
+function handleAdminUserAction(event) {
+    const actionButton = event.target.closest("[data-admin-action]");
+    if (!actionButton) {
+        return;
+    }
+    if (actionButton.dataset.adminAction === "save-user") {
+        updateAdminUser(actionButton.dataset.id);
     }
 }
 
 loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const formData = new FormData(loginForm);
-    const payload = Object.fromEntries(formData.entries());
+    const payload = Object.fromEntries(new FormData(loginForm).entries());
 
     try {
         const result = await apiFetch("/api/auth/login", {
@@ -721,8 +975,7 @@ loginForm.addEventListener("submit", async (event) => {
 
 registerForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const formData = new FormData(registerForm);
-    const payload = Object.fromEntries(formData.entries());
+    const payload = Object.fromEntries(new FormData(registerForm).entries());
 
     try {
         const result = await apiFetch("/api/auth/register", {
@@ -743,20 +996,27 @@ workJobForm.addEventListener("submit", submitWorkJob);
 lobsterForm.addEventListener("submit", submitLobster);
 openClawList.addEventListener("click", handleManagedInstanceAction);
 poolList.addEventListener("click", handlePoolAction);
+workJobList.addEventListener("click", handleWorkJobAction);
+adminUsersList.addEventListener("click", handleAdminUserAction);
+
 loadProfileButton.addEventListener("click", () => loadProfile(true));
 logoutButton.addEventListener("click", clearSession);
 loadOpenClawsButton.addEventListener("click", () => loadManagedOpenClaws(true));
 loadPoolButton.addEventListener("click", () => loadPoolOpenClaws(true));
 loadWorkJobsButton.addEventListener("click", () => loadWorkJobs(true));
 loadLobstersButton.addEventListener("click", () => loadLobsters(true));
+loadAdminOverviewButton.addEventListener("click", () => loadAdminOverview(true));
+
 cancelEditButton.addEventListener("click", () => {
     resetInstanceForm();
     setFeedback(resourceFeedback, "已退出编辑模式。", "success");
 });
+
 resetInstanceButton.addEventListener("click", () => {
     resetInstanceForm();
     setFeedback(resourceFeedback, "表单已清空。", "success");
 });
+
 clearSelectedOpenClawButton.addEventListener("click", () => {
     clearSelectedOpenClaw();
     setFeedback(jobFeedback, "已清空当前选择。", "success");
@@ -769,11 +1029,14 @@ authModeButtons.forEach((button) => {
 async function bootstrap() {
     switchAuthMode("login");
     renderProfile();
+    renderAdminOverview();
+    renderAdminUsers();
     renderSummary();
     renderManagedOpenClaws();
     renderPoolOpenClaws();
     renderWorkJobs();
     renderLobsters();
+    renderLobsterOptions();
     renderSelectedOpenClaw();
     resetInstanceForm();
 

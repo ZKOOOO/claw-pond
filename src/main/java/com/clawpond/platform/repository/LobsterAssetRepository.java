@@ -12,6 +12,7 @@ public interface LobsterAssetRepository extends JpaRepository<LobsterAsset, UUID
 
     List<LobsterAsset> findAllByOwnerOrderByCreatedAtDesc(UserAccount owner);
 
+    List<LobsterAsset> findTop5ByOrderByCreatedAtDesc();
+
     Optional<LobsterAsset> findByIdAndOwner(UUID id, UserAccount owner);
 }
-

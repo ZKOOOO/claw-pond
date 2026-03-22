@@ -5,7 +5,7 @@ import com.clawpond.platform.model.Role;
 import java.time.Instant;
 import java.util.UUID;
 
-public record UserProfileResponse(
+public record AdminUserResponse(
         UUID id,
         String username,
         String email,
@@ -14,3 +14,4 @@ public record UserProfileResponse(
         Instant createdAt
 ) {
 }
+

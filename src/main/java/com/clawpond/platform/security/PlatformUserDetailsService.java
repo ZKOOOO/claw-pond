@@ -25,8 +25,13 @@ public class PlatformUserDetailsService implements UserDetailsService {
                 .map(user -> new User(
                         user.getEmail(),
                         user.getPasswordHash(),
+                        user.isEnabled(),
+                        true,
+                        true,
+                        true,
                         List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
                 ))
                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
     }
 }
+

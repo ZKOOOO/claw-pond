@@ -20,6 +20,10 @@ public interface OpenClawInstanceRepository extends JpaRepository<OpenClawInstan
 
     List<OpenClawInstance> findAllByActiveTrue();
 
+    long countByActiveTrue();
+
+    List<OpenClawInstance> findTop5ByOrderByCreatedAtDesc();
+
     List<OpenClawInstance> findAllByOwnerOrderByCreatedAtDesc(UserAccount owner);
 
     Optional<OpenClawInstance> findByIdAndOwner(UUID id, UserAccount owner);

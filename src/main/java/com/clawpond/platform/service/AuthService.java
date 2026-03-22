@@ -53,6 +53,7 @@ public class AuthService {
         user.setEmail(normalizedEmail);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRole(Role.USER);
+        user.setEnabled(true);
 
         UserAccount saved = userAccountRepository.save(user);
         return toAuthResponse(saved);
@@ -81,6 +82,7 @@ public class AuthService {
                 user.getUsername(),
                 user.getEmail(),
                 user.getRole(),
+                user.isEnabled(),
                 user.getCreatedAt()
         );
     }
@@ -102,3 +104,4 @@ public class AuthService {
         );
     }
 }
+

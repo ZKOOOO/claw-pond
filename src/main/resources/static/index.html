@@ -11,31 +11,30 @@
     <div class="ambient ambient-left"></div>
     <div class="ambient ambient-right"></div>
 
-    <!-- 平台头部信息 -->
     <header class="hero">
         <div class="hero-copy">
             <p class="eyebrow">OpenClaw 平台</p>
-            <h1>把 OpenClaw 资源池、任务单和个人龙虾放进一个中文控制台</h1>
+            <h1>把资源池、任务单和龙虾资产统一到一个中文控制台</h1>
             <p class="hero-text">
-                这个页面直接连接当前 Spring Boot 服务。你可以完成注册登录、管理自己接入的 OpenClaw、
-                在共享 OpenClaw 池里按标签筛选资源、创建任务单干活，也可以上传自己的龙虾并为它们贴上擅长标签。
+                你可以在这里完成用户登录注册、管理自己的 OpenClaw、进入共享资源池按标签筛选实例、
+                创建任务单并绑定自己的龙虾文件，还能在管理员身份下看到平台总览。
             </p>
 
             <div class="hero-metrics">
                 <article class="metric-card">
-                    <span class="metric-label">一步</span>
+                    <span class="metric-label">步骤一</span>
                     <strong>登录平台</strong>
-                    <p>注册或登录后，JWT 会被自动保存在浏览器本地，页面刷新后也能继续使用。</p>
+                    <p>完成注册或登录后，JWT 会自动保存在浏览器本地。</p>
                 </article>
                 <article class="metric-card">
-                    <span class="metric-label">二步</span>
-                    <strong>管理 OpenClaw</strong>
-                    <p>接入自己的 OpenClaw，挂上标签，进入共享池后即可被任务选择。</p>
+                    <span class="metric-label">步骤二</span>
+                    <strong>配置 OpenClaw</strong>
+                    <p>给实例打标签，实例启用后会自动进入共享 OpenClaw 池。</p>
                 </article>
                 <article class="metric-card">
-                    <span class="metric-label">三步</span>
-                    <strong>上传龙虾干活</strong>
-                    <p>把自己的龙虾文件上传到平台，贴上擅长标签，形成可复用的个人资产池。</p>
+                    <span class="metric-label">步骤三</span>
+                    <strong>带着龙虾干活</strong>
+                    <p>上传龙虾、选择 OpenClaw、创建任务单，形成完整工作链路。</p>
                 </article>
             </div>
         </div>
@@ -44,14 +43,14 @@
             <div class="status-panel">
                 <div class="panel-head">
                     <span class="panel-kicker">操作指引</span>
-                    <strong>推荐的完整流程</strong>
+                    <strong>推荐流程</strong>
                 </div>
                 <ol class="guide-list">
-                    <li>注册并登录账号，确认“当前会话”里已经显示你的身份信息。</li>
-                    <li>在“我的 OpenClaw 管理”中录入实例地址、标签和说明。</li>
-                    <li>进入“OpenClaw 资源池”，按标签筛选想要干活的实例。</li>
-                    <li>选中实例后，在“任务单”里填写任务标题、说明和期望标签。</li>
-                    <li>如果你有自己的龙虾文件，可以在“我的龙虾”里上传并打标签沉淀资产。</li>
+                    <li>先注册或登录账号，确认当前会话已生效。</li>
+                    <li>录入自己的 OpenClaw，并为实例设置标签和状态。</li>
+                    <li>在共享 OpenClaw 池按标签筛选实例，选择一个可用节点。</li>
+                    <li>如果你有自己的龙虾，先上传龙虾文件并贴上擅长标签。</li>
+                    <li>创建任务单时选择 OpenClaw，并可附带自己的龙虾一起干活。</li>
                 </ol>
                 <div class="tip-box">
                     <span class="tip-badge">提示</span>
@@ -62,7 +61,6 @@
     </header>
 
     <main class="workspace">
-        <!-- 认证与会话 -->
         <section class="console-card auth-card">
             <div class="section-head">
                 <div>
@@ -143,7 +141,74 @@
             </div>
         </section>
 
-        <!-- OpenClaw 管理 -->
+        <section id="admin-card" class="console-card admin-card hidden">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker">管理员总览</p>
+                    <h2>平台运营看板</h2>
+                </div>
+                <button id="load-admin-overview-btn" class="ghost-btn" type="button">刷新总览</button>
+            </div>
+
+            <div id="admin-feedback" class="feedback-panel" aria-live="polite"></div>
+
+            <div class="summary-grid">
+                <article class="summary-card">
+                    <span>用户总数</span>
+                    <strong id="admin-total-users">0</strong>
+                    <p>当前平台全部注册用户</p>
+                </article>
+                <article class="summary-card">
+                    <span>OpenClaw 总数</span>
+                    <strong id="admin-total-openclaws">0</strong>
+                    <p>包括启用和停用实例</p>
+                </article>
+                <article class="summary-card">
+                    <span>活跃 OpenClaw</span>
+                    <strong id="admin-active-openclaws">0</strong>
+                    <p>共享池当前可见的实例</p>
+                </article>
+                <article class="summary-card">
+                    <span>任务单总数</span>
+                    <strong id="admin-total-work-jobs">0</strong>
+                    <p>平台已创建的全部任务单</p>
+                </article>
+                <article class="summary-card">
+                    <span>龙虾总数</span>
+                    <strong id="admin-total-lobsters">0</strong>
+                    <p>平台用户已上传的龙虾文件</p>
+                </article>
+                <article class="summary-card">
+                    <span>标签总数</span>
+                    <strong id="admin-total-tags">0</strong>
+                    <p>跨 OpenClaw、龙虾、任务单复用</p>
+                </article>
+            </div>
+
+            <div class="admin-grid">
+                <article class="admin-panel">
+                    <h3>用户管理</h3>
+                    <div id="admin-users-list" class="admin-list"></div>
+                </article>
+                <article class="admin-panel">
+                    <h3>最近用户</h3>
+                    <div id="admin-recent-users" class="admin-list"></div>
+                </article>
+                <article class="admin-panel">
+                    <h3>最近 OpenClaw</h3>
+                    <div id="admin-recent-openclaws" class="admin-list"></div>
+                </article>
+                <article class="admin-panel">
+                    <h3>最近任务单</h3>
+                    <div id="admin-recent-work-jobs" class="admin-list"></div>
+                </article>
+                <article class="admin-panel">
+                    <h3>最近龙虾</h3>
+                    <div id="admin-recent-lobsters" class="admin-list"></div>
+                </article>
+            </div>
+        </section>
+
         <section class="console-card onboarding-card">
             <div class="section-head">
                 <div>
@@ -171,7 +236,7 @@
                 </label>
                 <label class="field">
                     <span>远端令牌</span>
-                    <input name="apiToken" type="text" placeholder="如需更新远端令牌，请在这里填写">
+                    <input name="apiToken" type="text" placeholder="如需更新远端令牌，可在这里填写">
                 </label>
                 <label class="field field-wide">
                     <span>实例标签</span>
@@ -232,7 +297,6 @@
             <div id="openclaw-list" class="instance-grid hidden"></div>
         </section>
 
-        <!-- OpenClaw 池 -->
         <section class="console-card pool-card">
             <div class="section-head">
                 <div>
@@ -259,7 +323,6 @@
             <div id="pool-list" class="instance-grid hidden"></div>
         </section>
 
-        <!-- 任务单 -->
         <section class="console-card jobs-card">
             <div class="section-head">
                 <div>
@@ -281,6 +344,16 @@
                     <span>期望标签</span>
                     <input name="desiredTagText" type="text" placeholder="OCR, 高并发">
                 </label>
+                <label class="field">
+                    <span>选择龙虾</span>
+                    <select id="job-lobster-select" name="lobsterAssetId">
+                        <option value="">不携带龙虾</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>已选 OpenClaw</span>
+                    <input id="selected-openclaw-name" type="text" value="未选择" readonly>
+                </label>
                 <label class="field field-wide">
                     <span>任务说明</span>
                     <textarea name="description" rows="3" placeholder="描述本次要让 OpenClaw 完成的工作"></textarea>
@@ -295,13 +368,12 @@
 
             <div id="work-job-empty" class="empty-state">
                 <strong>还没有任务单</strong>
-                <p>先在资源池中选择一个 OpenClaw，然后创建任务单。</p>
+                <p>先在资源池中选择一个 OpenClaw，再决定是否携带自己的龙虾来创建任务。</p>
             </div>
 
             <div id="work-job-list" class="job-grid hidden"></div>
         </section>
 
-        <!-- 龙虾上传 -->
         <section class="console-card lobster-card">
             <div class="section-head">
                 <div>
@@ -337,13 +409,12 @@
 
             <div id="lobster-empty" class="empty-state">
                 <strong>还没有上传任何龙虾</strong>
-                <p>上传一个龙虾文件后，你可以在这里看到名称、标签和下载入口。</p>
+                <p>上传龙虾文件后，你可以在这里看到名称、标签和下载入口。</p>
             </div>
 
             <div id="lobster-list" class="asset-grid hidden"></div>
         </section>
 
-        <!-- 接口说明 -->
         <section class="console-card api-card">
             <div class="section-head">
                 <div>
@@ -371,12 +442,17 @@
                 <article class="api-tile">
                     <span class="method method-update">任务单</span>
                     <strong>/api/work-jobs</strong>
-                    <p>选择 OpenClaw 后创建任务，并查看自己的任务列表。</p>
+                    <p>选择 OpenClaw，可附带龙虾，再创建任务单。</p>
                 </article>
                 <article class="api-tile">
                     <span class="method method-create">龙虾</span>
                     <strong>/api/lobsters</strong>
                     <p>上传、查看和下载自己的龙虾文件资产。</p>
+                </article>
+                <article class="api-tile">
+                    <span class="method method-read">管理员</span>
+                    <strong>/api/admin/overview</strong>
+                    <p>查看平台用户、实例、任务单、龙虾和标签总览。</p>
                 </article>
             </div>
         </section>

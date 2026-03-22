@@ -3,6 +3,7 @@ package com.clawpond.platform.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -30,9 +31,16 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), null);
     }
 
-    @ExceptionHandler({UnauthorizedException.class, BadCredentialsException.class})
+    @ExceptionHandler({UnauthorizedException.class, BadCredentialsException.class, DisabledException.class})
     public ResponseEntity<ErrorResponse> handleUnauthorized(RuntimeException exception) {
-        String message = exception instanceof BadCredentialsException ? "邮箱或密码错误" : exception.getMessage();
+        String message;
+        if (exception instanceof BadCredentialsException) {
+            message = "邮箱或密码错误";
+        } else if (exception instanceof DisabledException) {
+            message = "账号已被停用";
+        } else {
+            message = exception.getMessage();
+        }
         return buildResponse(HttpStatus.UNAUTHORIZED, message, null);
     }
 

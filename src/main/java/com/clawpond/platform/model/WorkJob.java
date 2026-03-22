@@ -46,6 +46,10 @@ public class WorkJob {
     @JoinColumn(name = "openclaw_instance_id", nullable = false)
     private OpenClawInstance openClawInstance;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lobster_asset_id")
+    private LobsterAsset lobsterAsset;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "work_job_tags",
@@ -109,6 +113,14 @@ public class WorkJob {
         this.openClawInstance = openClawInstance;
     }
 
+    public LobsterAsset getLobsterAsset() {
+        return lobsterAsset;
+    }
+
+    public void setLobsterAsset(LobsterAsset lobsterAsset) {
+        this.lobsterAsset = lobsterAsset;
+    }
+
     public Set<Tag> getDesiredTags() {
         return desiredTags;
     }
@@ -121,4 +133,3 @@ public class WorkJob {
         return createdAt;
     }
 }
-

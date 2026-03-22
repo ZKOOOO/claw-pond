@@ -2,6 +2,7 @@ package com.clawpond.platform.controller;
 
 import com.clawpond.platform.dto.WorkJobCreateRequest;
 import com.clawpond.platform.dto.WorkJobResponse;
+import com.clawpond.platform.dto.WorkJobStatusUpdateRequest;
 import com.clawpond.platform.model.UserAccount;
 import com.clawpond.platform.service.AuthService;
 import com.clawpond.platform.service.WorkJobService;
@@ -10,13 +11,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/work-jobs")
@@ -44,6 +48,16 @@ public class WorkJobController {
     public List<WorkJobResponse> listMine(@AuthenticationPrincipal UserDetails userDetails) {
         UserAccount requester = authService.getCurrentUser(userDetails.getUsername());
         return workJobService.listMine(requester);
+    }
+
+    @PutMapping("/{id}/status")
+    public WorkJobResponse updateStatus(
+            @PathVariable UUID id,
+            @Valid @RequestBody WorkJobStatusUpdateRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserAccount requester = authService.getCurrentUser(userDetails.getUsername());
+        return workJobService.updateStatus(id, request, requester);
     }
 }
 
